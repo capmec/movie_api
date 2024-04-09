@@ -1,11 +1,14 @@
 const express = require('express');
+fs = require('fs');
 morgan = require('morgan');
 path = require('path');
 
 const app = express();
 
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log.txt'), { flags: 'a' });
+
 //Use the Morgan middleware library to log all requests (instead of using the fs module to write to a text file).
-app.use(morgan('common'));
+app.use(morgan('combined', { stream: accessLogStream }));
 
 let topMovies = [
 	{
