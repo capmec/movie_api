@@ -1,0 +1,122 @@
+:root {
+	--primary-color: #ff6666;
+	--secondary-color: #2772b3;
+	--font-color--white: #fff;
+}
+
+body {
+	font-family: 'PT Sans', sans-serif;
+	background-color: #ffffff;
+}
+
+main {
+	padding: 0 100px;
+}
+
+h1 {
+	color: #232323;
+	display: flex;
+	justify-content: center;
+	font-family: 'Jost', sans-serif;
+	font-size: 4.6rem;
+	font-weight: 600;
+	line-height: 1.1;
+}
+h2 {
+	color: var(--primary-color);
+	font-family: 'Jost', sans-serif;
+	margin-top: 30px;
+}
+
+table {
+	border-collapse: collapse;
+	margin-top: 20px;
+	width: 100%;
+}
+
+thead tr th {
+	background-color: var(--primary-color);
+	color: #fff;
+	text-align: left;
+}
+
+tr th {
+	background-color: var(--secondary-color);
+	color: #fff;
+	text-align: left;
+}
+
+tr {
+	border: 1px solid var(--secondary-color);
+}
+
+th,
+td {
+	padding: 10px 30px 10px 10px;
+}
+
+.get,
+.put,
+.post,
+.delete {
+	color: var(--font-color--white);
+}
+
+.get {
+	background-color: #1b921b;
+	display: flex;
+	justify-content: center;
+}
+
+.put {
+	background-color: #5e24cd;
+	display: flex;
+	justify-content: center;
+}
+
+.post {
+	background-color: #ffda19;
+	display: flex;
+	justify-content: center;
+}
+
+.delete {
+	background-color: #ed4d51;
+	display: flex;
+	justify-content: center;
+}
+
+span.get,
+span.post,
+span.put,
+span.delete {
+	padding: 0 10px;
+	border-radius: 3px;
+}
+
+.endpoint-table {
+	width: 100%;
+}
+
+.endpoint-table tr td,
+.endpoint-table thead th {
+	width: 20%;
+}
+
+.api-body {
+	color: #ed4d51;
+	padding-left: 20px;
+	word-break: break-word;
+}
+
+.object-key {
+	color: #5e24cd;
+}
+
+.response {
+	min-width: 180px;
+}
+
+a {
+	color: #fff;
+}

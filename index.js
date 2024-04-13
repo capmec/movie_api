@@ -156,7 +156,7 @@ let users = [
 		id: 1,
 		name: 'John Doe',
 		username: 'johndoe',
-		email: 'filmsFan2000@aol.com',
+		email: 'filmsFan2000@netflix.com',
 		favouriteMovies: ['Inception', 'The Shawshank Redemption'],
 	},
 	{
@@ -164,7 +164,7 @@ let users = [
 		name: 'Jane Doe',
 		username: 'janedoe',
 		email: 'flixfilm@gmail.com',
-		favouriteMovies: ['The Mountain'],
+		favouriteMovies: [],
 	},
 ];
 
@@ -237,10 +237,10 @@ app.put('/users/:id', (req, res) => {
 });
 
 //Allow users to add a movie to their list of favorites (CREATE)
-app.post('/users/:id/:movieTitle', (req, res) => {
-	//console.log(users);
+app.put('/users/:id/:movieTitle', (req, res) => {
+	console.log(users);
 	const { id, movieTitle } = req.params;
-	//console.log(`id: ${id}, movieTitle: ${movieTitle}`);
+	console.log(`id: ${id}, movieTitle: ${movieTitle}`);
 	let user = users.find((user) => user.id == id);
 	if (user) {
 		user.favouriteMovies.push(movieTitle);
