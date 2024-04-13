@@ -1,5 +1,4 @@
 const express = require('express');
-fs = require('fs');
 morgan = require('morgan');
 path = require('path');
 bodyParser = require('body-parser');
@@ -10,7 +9,7 @@ const app = express();
 app.use(bodyParser.json());
 
 //Use the Morgan middleware library to log all requests (instead of using the fs module to write to a text file).
-app.use(morgan('combined', { stream: accessLogStream }));
+app.use(morgan('common'));
 
 let movies = [
 	{
