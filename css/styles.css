@@ -63,13 +63,13 @@ td {
 }
 
 .get {
-	background-color: #1b921b;
+	background-color: #9ecd5b;
 	display: flex;
 	justify-content: center;
 }
 
 .put {
-	background-color: #5e24cd;
+	background-color: #00c0d7;
 	display: flex;
 	justify-content: center;
 }
@@ -81,7 +81,7 @@ td {
 }
 
 .delete {
-	background-color: #ed4d51;
+	background-color: #e14a1b;
 	display: flex;
 	justify-content: center;
 }
