@@ -2,3 +2,6 @@
 ::1 - - [09/Apr/2024:21:38:02 +0000] "GET /movies HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
 ::1 - - [09/Apr/2024:21:38:17 +0000] "GET /documentation.html HTTP/1.1" 304 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
 ::1 - - [13/Apr/2024:20:51:15 +0000] "GET /movies/director/Peter%20Jackson HTTP/1.1" 404 170 "-" "PostmanRuntime/7.32.1"
+::1 - - [19/Apr/2024:14:05:33 +0000] "GET /users/ HTTP/1.1" 200 856
+::1 - - [19/Apr/2024:14:06:36 +0000] "GET /movies/ HTTP/1.1" 404 146
+::1 - - [19/Apr/2024:14:07:37 +0000] "GET /movies/ HTTP/1.1" 200 4075
