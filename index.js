@@ -1,34 +1,85 @@
-const mongoose = require('mongoose');
-const Models = require('./models.js');
+const express = require('express'),
+	mongoose = require('mongoose'),
+	Models = require('./models.js'),
+	{ check, validationResult } = require('express-validator');
 
-const express = require('express');
-morgan = require('morgan');
-fs = require('fs');
-path = require('path');
-bodyParser = require('body-parser');
-uuid = require('uuid');
+const dotenv = require('dotenv');
 
-const passport = require('passport');
-require('./auth/passport.js');
+const app = express(); //use this variable to route HTTP requests and responses
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const app = express();
+//connect LOCAL database
+//mongoose.connect('mongodb://localhost:27017/myFlixDB', { useNewUrlParser: true, useUnifiedTopology: true });
 
-app.use(bodyParser.json());
-
-mongoose.connect('mongodb://localhost:27017/myFlixDB', { useNewUrlParser: true, useUnifiedTopology: true });
+//connects to MongoDB Atlas database
+dotenv.config();
+mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const Movies = Models.Movie;
 const Users = Models.User;
 
-//Use the Morgan middleware library to log all requests (instead of using the fs module to write to a text file).
-// Create a write stream (in append mode)
-const accessLogStream = fs.createWriteStream(path.join(__dirname, 'log.txt'), { flags: 'a' });
+const cors = require('cors');
+app.use(cors());
 
-// Setup the logger
-app.use(morgan('common', { stream: accessLogStream }));
+let auth = require('./auth/auth.js')(app); //(app) ensures Express is available in the .auth.js file
+const passport = require('passport');
+require('./auth/passport.js');
 
-app.use(bodyParser.urlencoded({ extended: true }));
-let auth = require('./auth/auth.js')(app);
+//Create another GET route located at the endpoint “/” that returns a default textual response of your choosing.
+app.get('/', (req, res) => {
+	res.send('Welcome to myFlix!');
+});
+
+//Use express.static to serve your “documentation.html” file from the public folder (rather than using the http, url, and fs modules).
+app.use(express.static('public'));
+
+/******************** USERS CRUD ********************/
+
+// Allow new users to register (CREATE)
+app.post(
+	'/users',
+	[
+		//input validation here
+		check('Username', 'Username is required').isLength({ min: 5 }),
+		check('Username', 'Username contains non alphanumeric characters - not allowed.').isAlphanumeric(),
+		check('Password', 'Password is required').not().isEmpty(),
+		check('Email', 'Email does not appear to be valid').isEmail(),
+	],
+	async (req, res) => {
+		//check validation object for errors
+		let errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(422).json({ errors: errors.array() });
+		}
+
+		let hashedPassword = Users.hashPassword(req.body.Password);
+		await Users.findOne({ Username: req.body.Username })
+			.then((user) => {
+				if (user) {
+					return res.status(400).send(req.body.Username + ' already exists');
+				} else {
+					Users.create({
+						Username: req.body.Username,
+						Password: hashedPassword,
+						Email: req.body.Email,
+						Birthday: req.body.Birthday,
+					})
+						.then((user) => {
+							res.status(201).json(user);
+						})
+						.catch((error) => {
+							console.error(error);
+							res.status(500).send('Error: ' + error);
+						});
+				}
+			})
+			.catch((error) => {
+				console.log(error);
+				res.status(500).send('Error: ' + error);
+			});
+	},
+);
 
 //CREATE a new movie entry
 app.post('/movies', passport.authenticate('jwt', { session: false }), async (req, res) => {
@@ -106,34 +157,6 @@ app.get('/movies/Director/:Director', passport.authenticate('jwt', { session: fa
 		})
 		.catch((error) => {
 			console.error(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-// Allow new users to register (CREATE)
-app.post('/users', async (req, res) => {
-	await Users.findOne({ Username: req.body.Username })
-		.then((user) => {
-			if (user) {
-				return res.status(400).send(req.body.Username + ' already exists');
-			} else {
-				Users.create({
-					Username: req.body.Username,
-					Password: req.body.Password,
-					Email: req.body.Email,
-					Birthday: req.body.Birthday,
-				})
-					.then((user) => {
-						res.status(201).json(user);
-					})
-					.catch((error) => {
-						console.error(error);
-						res.status(500).send('Error: ' + error);
-					});
-			}
-		})
-		.catch((error) => {
-			console.log(error);
 			res.status(500).send('Error: ' + error);
 		});
 });
@@ -266,20 +289,7 @@ app.delete('/users/:Username', passport.authenticate('jwt', { session: false }),
 		});
 });
 
-//Create another GET route located at the endpoint “/” that returns a default textual response of your choosing.
-app.get('/', (req, res) => {
-	res.send('Welcome to myFlix!');
-}),
-	//Use express.static to serve your “documentation.html” file from the public folder (rather than using the http, url, and fs modules).
-
-	app.use(express.static('public')),
-	//ERROR HANDLING WITH MORGAN
-	app.use((err, req, res, next) => {
-		console.error(err.stack);
-		res.status(500).send('Something broke!');
-	}),
-	//LISTEN FOR REQUESTS
-
-	app.listen(8000, () => {
-		console.log('Your app is listening on port 8000.');
-	});
+const port = process.env.PORT || 8080;
+app.listen(port, '0.0.0.0', () => {
+	console.log('Listening on Port ' + port);
+});

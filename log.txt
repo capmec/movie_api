@@ -36,3 +36,6 @@
 ::1 - - [20/Apr/2024:17:08:46 +0000] "GET /movies HTTP/1.1" 200 4075
 ::1 - - [20/Apr/2024:17:19:14 +0000] "GET /movies HTTP/1.1" 401 -
 ::1 - - [20/Apr/2024:17:19:21 +0000] "GET /movies HTTP/1.1" 200 4075
+::1 - - [26/Apr/2024:18:09:57 +0000] "POST /login?Username=theauthenticator&Password=authenticates HTTP/1.1" 200 640
+::1 - - [26/Apr/2024:18:35:39 +0000] "POST /users HTTP/1.1" 201 169
+::1 - - [26/Apr/2024:18:35:59 +0000] "POST /login?Username=theauthenticator&Password=authenticates HTTP/1.1" 200 640

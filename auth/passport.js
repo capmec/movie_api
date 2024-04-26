@@ -23,6 +23,10 @@ passport.use(
 							message: 'Incorrect username or password.',
 						});
 					}
+					if (!user.validatePassword(password)) {
+						console.log('incorrect password');
+						return callback(null, false, { message: 'Incorrect password.' });
+					}
 					console.log('finished');
 					return callback(null, user);
 				})
@@ -36,13 +40,15 @@ passport.use(
 	),
 );
 
+//Authenticate users based on JWT submitted with their request.
 passport.use(
 	new JWTStrategy(
 		{
-			jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-			secretOrKey: 'your_jwt_secret',
+			jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(), //JWT is extracted from HTTP request header
+			secretOrKey: 'your_jwt_secret', //use secret key to verify signature of the JWT (ensure client is who it says it is and JWT hasn't been altered)
 		},
 		async (jwtPayload, callback) => {
+			//take the object literal of the decoded JWT payload as a parameter
 			return await Users.findById(jwtPayload._id)
 				.then((user) => {
 					return callback(null, user);
