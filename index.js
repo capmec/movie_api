@@ -1,295 +1,207 @@
 const express = require('express'),
 	mongoose = require('mongoose'),
 	Models = require('./models.js'),
-	{ check, validationResult } = require('express-validator');
-
-const dotenv = require('dotenv');
-
-const app = express(); //use this variable to route HTTP requests and responses
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-//connect LOCAL database
-//mongoose.connect('mongodb://localhost:27017/myFlixDB', { useNewUrlParser: true, useUnifiedTopology: true });
-
-//connects to MongoDB Atlas database
-dotenv.config();
-mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-
-const Movies = Models.Movie;
-const Users = Models.User;
-
-const cors = require('cors');
-app.use(cors());
-
-let auth = require('./auth/auth.js')(app); //(app) ensures Express is available in the .auth.js file
-const passport = require('passport');
-require('./auth/passport.js');
-
-//Create another GET route located at the endpoint “/” that returns a default textual response of your choosing.
-app.get('/', (req, res) => {
-	res.send('Welcome to myFlix!');
-});
-
-//Use express.static to serve your “documentation.html” file from the public folder (rather than using the http, url, and fs modules).
-app.use(express.static('public'));
-
-/******************** USERS CRUD ********************/
-
-// Allow new users to register (CREATE)
-app.post(
-	'/users',
-	[
-		//input validation here
-		check('Username', 'Username is required').isLength({ min: 5 }),
-		check('Username', 'Username contains non alphanumeric characters - not allowed.').isAlphanumeric(),
-		check('Password', 'Password is required').not().isEmpty(),
-		check('Email', 'Email does not appear to be valid').isEmail(),
-	],
-	async (req, res) => {
-		//check validation object for errors
-		let errors = validationResult(req);
-		if (!errors.isEmpty()) {
-			return res.status(422).json({ errors: errors.array() });
-		}
-
-		let hashedPassword = Users.hashPassword(req.body.Password);
-		await Users.findOne({ Username: req.body.Username })
-			.then((user) => {
-				if (user) {
-					return res.status(400).send(req.body.Username + ' already exists');
-				} else {
-					Users.create({
-						Username: req.body.Username,
-						Password: hashedPassword,
-						Email: req.body.Email,
-						Birthday: req.body.Birthday,
-					})
-						.then((user) => {
-							res.status(201).json(user);
+	{ check: e, validationResult: s } = require('express-validator'),
+	dotenv = require('dotenv'),
+	app = express()
+app.use(express.json()),
+	app.use(express.urlencoded({ extended: !0 })),
+	dotenv.config(),
+	mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: !0, useUnifiedTopology: !0 })
+const Movies = Models.Movie,
+	Users = Models.User,
+	cors = require('cors')
+app.use(cors())
+let auth = require('./auth/auth.js')(app)
+const passport = require('passport')
+require('./auth/passport.js'),
+	app.get('/', (e, s) => {
+		s.send('Welcome to myFlix!')
+	}),
+	app.use(express.static('public')),
+	app.post(
+		'/users',
+		[
+			e('Username', 'Username is required').isLength({ min: 5 }),
+			e('Username', 'Username contains non alphanumeric characters - not allowed.').isAlphanumeric(),
+			e('Password', 'Password is required').not().isEmpty(),
+			e('Email', 'Email does not appear to be valid').isEmail(),
+		],
+		async (e, a) => {
+			let r = s(e)
+			if (!r.isEmpty()) return a.status(422).json({ errors: r.array() })
+			let t = Users.hashPassword(e.body.Password)
+			await Users.findOne({ Username: e.body.Username })
+				.then((s) => {
+					if (s) return a.status(400).send(e.body.Username + ' already exists')
+					Users.create({ Username: e.body.Username, Password: t, Email: e.body.Email, Birthday: e.body.Birthday })
+						.then((e) => {
+							a.status(201).json(e)
 						})
-						.catch((error) => {
-							console.error(error);
-							res.status(500).send('Error: ' + error);
-						});
-				}
-			})
-			.catch((error) => {
-				console.log(error);
-				res.status(500).send('Error: ' + error);
-			});
-	},
-);
-
-//CREATE a new movie entry
-app.post('/movies', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Movies.findOne({ Title: req.body.Title })
-		.then((movie) => {
-			if (movie) {
-				return res.status(400).send(req.body.Title + ' already exists');
-			} else {
-				Movies.create({
-					Title: req.body.Title,
-					Year: req.body.Year,
-					Description: req.body.Description,
-					Genre: req.body.Genre,
-					Director: req.body.Director,
-					Actors: req.body.Actors,
-					ImagePath: req.body.ImagePath,
-					Featured: req.body.Featured,
+						.catch((e) => {
+							console.error(e), a.status(500).send('Error: ' + e)
+						})
 				})
-					.then((movie) => {
-						res.status(201).json(movie);
-					})
-					.catch((error) => {
-						console.error(error);
-						res.status(500).send('Error: ' + error);
-					});
-			}
-		})
-		.catch((error) => {
-			console.log(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-//GET all movies
-app.get('/movies', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Movies.find()
-		.then((movies) => {
-			res.json(movies);
-		})
-		.catch((error) => {
-			console.error(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-// Return a film from the title (READ)
-app.get('/movies/:Title', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Movies.findOne({ Title: req.params.Title })
-		.then((movie) => {
-			res.json(movie);
-		})
-		.catch((error) => {
-			console.error(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-// Return a film by the genre (READ)
-app.get('/movies/Genre/:Genre', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Movies.find({ 'Genre.Name': req.params.Genre })
-		.then((movies) => {
-			res.json(movies);
-		})
-		.catch((error) => {
-			console.error(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-// Return Director data (READ)\
-app.get('/movies/Director/:Director', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Movies.findOne({ 'Director.Name': req.params.Director })
-		.then((director) => {
-			res.json(director.Director);
-		})
-		.catch((error) => {
-			console.error(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-//Allow users to update their user info (username) (UPDATE)
-app.put('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	//CONDITIONAL TO CHECK IF THE USERNAME IS THE SAME AS THE ONE IN THE BODY
-	if (req.user.Username !== req.params.Username) {
-		return res.status(403).send(req.user.Username + ' does not match ' + req.params.Username);
-	}
-	await Users.findOneAndUpdate(
-		{ Username: req.params.Username },
-		{
-			$set: {
-				Username: req.body.Username,
-				Password: req.body.Password,
-				Email: req.body.Email,
-				Birthday: req.body.Birthday,
-				FavoriteMovies: req.body.FavoriteMovies,
-			},
+				.catch((e) => {
+					console.log(e), a.status(500).send('Error: ' + e)
+				})
 		},
-		{ new: true }, // This line makes sure that the updated document is returned
-	)
-		.then((updatedUser) => {
-			res.json(updatedUser);
-		})
-		.catch((error) => {
-			console.error(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-//GET all users
-app.get('/users', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.find()
-		.then((users) => {
-			res.json(users);
-		})
-		.catch((error) => {
-			console.error(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-//GET a user by username
-app.get('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.findOne({ Username: req.params.Username })
-		.then((user) => {
-			res.json(user);
-		})
-		.catch((error) => {
-			console.error(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-// DELETE a user by username
-app.delete('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.findOneAndDelete({ Username: req.params.Username })
-		.then((user) => {
-			if (!user) {
-				res.status(400).send(req.params.Username + ' was not found');
-			} else {
-				res.status(200).send(req.params.Username + ' was deleted.');
-			}
-		})
-		.catch((error) => {
-			console.error(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-//Allow users to add a movie to their list of favorites (UPDATE)
-app.post(
-	'/users/:Username/FavoriteMovies/:MovieID',
-	passport.authenticate('jwt', { session: false }),
-	async (req, res) => {
-		await Users.findOneAndUpdate(
-			{ Username: req.params.Username },
-			{
-				$push: { FavoriteMovies: req.params.MovieID },
-			},
-			{ new: true },
-		)
-			.then((updatedUser) => {
-				res.json(updatedUser);
+	),
+	app.post('/movies', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		await Movies.findOne({ Title: e.body.Title })
+			.then((a) => {
+				if (a) return s.status(400).send(e.body.Title + ' already exists')
+				Movies.create({
+					Title: e.body.Title,
+					Year: e.body.Year,
+					Description: e.body.Description,
+					Genre: e.body.Genre,
+					Director: e.body.Director,
+					Actors: e.body.Actors,
+					ImagePath: e.body.ImagePath,
+					Featured: e.body.Featured,
+				})
+					.then((e) => {
+						s.status(201).json(e)
+					})
+					.catch((e) => {
+						console.error(e), s.status(500).send('Error: ' + e)
+					})
 			})
-			.catch((error) => {
-				console.error(error);
-				res.status(500).send('Error: ' + error);
-			});
-	},
-);
-
-//Allow users to remove a movie from their list of favorites (DELETE)
-app.delete(
-	'/users/:Username/FavoriteMovies/:MovieID',
-	passport.authenticate('jwt', { session: false }),
-	async (req, res) => {
-		await Users.findOneAndUpdate(
-			{ Username: req.params.Username },
-			{
-				$pull: { FavoriteMovies: req.params.MovieID },
-			},
-			{ new: true },
-		)
-			.then((updatedUser) => {
-				res.json(updatedUser);
+			.catch((e) => {
+				console.log(e), s.status(500).send('Error: ' + e)
 			})
-			.catch((error) => {
-				console.error(error);
-				res.status(500).send('Error: ' + error);
-			});
-	},
-);
-
-//Allow existing users to deregister(DELETE)
-app.delete('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.findOneAndRemove({ Username: req.params.Username })
-		.then((user) => {
-			if (!user) {
-				res.status(400).send(req.params.Username + ' was not found');
-			} else {
-				res.status(200).send(req.params.Username + ' was deleted.');
-			}
-		})
-		.catch((error) => {
-			console.error(error);
-			res.status(500).send('Error: ' + error);
-		});
-});
-
-const port = process.env.PORT || 8080;
+	}),
+	app.get('/movies', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		await Movies.find()
+			.then((e) => {
+				s.json(e)
+			})
+			.catch((e) => {
+				console.error(e), s.status(500).send('Error: ' + e)
+			})
+	}),
+	app.get('/movies/:Title', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		await Movies.findOne({ Title: e.params.Title })
+			.then((e) => {
+				s.json(e)
+			})
+			.catch((e) => {
+				console.error(e), s.status(500).send('Error: ' + e)
+			})
+	}),
+	app.get('/movies/Genre/:Genre', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		await Movies.find({ 'Genre.Name': e.params.Genre })
+			.then((e) => {
+				s.json(e)
+			})
+			.catch((e) => {
+				console.error(e), s.status(500).send('Error: ' + e)
+			})
+	}),
+	app.get('/movies/Director/:Director', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		await Movies.findOne({ 'Director.Name': e.params.Director })
+			.then((e) => {
+				s.json(e.Director)
+			})
+			.catch((e) => {
+				console.error(e), s.status(500).send('Error: ' + e)
+			})
+	}),
+	app.put('/users/:Username', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		if (e.user.Username !== e.params.Username)
+			return s.status(403).send(e.user.Username + ' does not match ' + e.params.Username)
+		await Users.findOneAndUpdate(
+			{ Username: e.params.Username },
+			{
+				$set: {
+					Username: e.body.Username,
+					Password: e.body.Password,
+					Email: e.body.Email,
+					Birthday: e.body.Birthday,
+					FavoriteMovies: e.body.FavoriteMovies,
+				},
+			},
+			{ new: !0 },
+		)
+			.then((e) => {
+				s.json(e)
+			})
+			.catch((e) => {
+				console.error(e), s.status(500).send('Error: ' + e)
+			})
+	}),
+	app.get('/users', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		await Users.find()
+			.then((e) => {
+				s.json(e)
+			})
+			.catch((e) => {
+				console.error(e), s.status(500).send('Error: ' + e)
+			})
+	}),
+	app.get('/users/:Username', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		await Users.findOne({ Username: e.params.Username })
+			.then((e) => {
+				s.json(e)
+			})
+			.catch((e) => {
+				console.error(e), s.status(500).send('Error: ' + e)
+			})
+	}),
+	app.delete('/users/:Username', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		await Users.findOneAndDelete({ Username: e.params.Username })
+			.then((a) => {
+				a
+					? s.status(200).send(e.params.Username + ' was deleted.')
+					: s.status(400).send(e.params.Username + ' was not found')
+			})
+			.catch((e) => {
+				console.error(e), s.status(500).send('Error: ' + e)
+			})
+	}),
+	app.post('/users/:Username/FavoriteMovies/:MovieID', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		await Users.findOneAndUpdate(
+			{ Username: e.params.Username },
+			{ $push: { FavoriteMovies: e.params.MovieID } },
+			{ new: !0 },
+		)
+			.then((e) => {
+				s.json(e)
+			})
+			.catch((e) => {
+				console.error(e), s.status(500).send('Error: ' + e)
+			})
+	}),
+	app.delete(
+		'/users/:Username/FavoriteMovies/:MovieID',
+		passport.authenticate('jwt', { session: !1 }),
+		async (e, s) => {
+			await Users.findOneAndUpdate(
+				{ Username: e.params.Username },
+				{ $pull: { FavoriteMovies: e.params.MovieID } },
+				{ new: !0 },
+			)
+				.then((e) => {
+					s.json(e)
+				})
+				.catch((e) => {
+					console.error(e), s.status(500).send('Error: ' + e)
+				})
+		},
+	),
+	app.delete('/users/:Username', passport.authenticate('jwt', { session: !1 }), async (e, s) => {
+		await Users.findOneAndRemove({ Username: e.params.Username })
+			.then((a) => {
+				a
+					? s.status(200).send(e.params.Username + ' was deleted.')
+					: s.status(400).send(e.params.Username + ' was not found')
+			})
+			.catch((e) => {
+				console.error(e), s.status(500).send('Error: ' + e)
+			})
+	})
+const port = process.env.PORT || 8080
 app.listen(port, '0.0.0.0', () => {
-	console.log('Listening on Port ' + port);
-});
+	console.log('Listening on Port ' + port)
+})
