@@ -1,6 +1,7 @@
 # Movie API
 
-This project is a movie API built with Node.js, Express.js, and MongoDB. It allows users to access a collection of movies, store user data (including favorite films), and implements JWT authentication for secure user sessions.
+This project is a movie API built with Node.js, Express.js, and MongoDB. It allows users to access a collection of
+movies, store user data (including favorite films), and implements JWT authentication for secure user sessions.
 
 ## Features
 
@@ -32,3 +33,6 @@ This project is a movie API built with Node.js, Express.js, and MongoDB. It allo
    ```bash
    git clone https://github.com/capmec/movie_api.git
    cd repository
+   start:
+   node index.js
+   ```
