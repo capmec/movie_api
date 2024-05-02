@@ -32,10 +32,10 @@ app.use(express.static('public'))
 app.post(
 	'/users',
 	[
-		check('Username', 'Username is required').isLength({ min: 5 }),
-		check('Username', 'Username contains non alphanumeric characters - not allowed.').isAlphanumeric(),
-		check('Password', 'Password is required').not().isEmpty(),
-		check('Email', 'Email does not appear to be valid').isEmail(),
+		check('username', 'Username is required').isLength({ min: 5 }),
+		check('username', 'Username contains non alphanumeric characters - not allowed.').isAlphanumeric(),
+		check('password', 'Password is required').not().isEmpty(),
+		check('email', 'Email does not appear to be valid').isEmail(),
 	],
 	async (req, res) => {
 		let errors = validationResult(req)
@@ -44,16 +44,16 @@ app.post(
 		}
 
 		let hashedPassword = Users.hashPassword(req.body.Password)
-		await Users.findOne({ Username: req.body.Username })
+		await Users.findOne({ username: req.body.username })
 			.then((user) => {
 				if (user) {
-					return res.status(400).send(req.body.Username + ' already exists')
+					return res.status(400).send(req.body.username + ' already exists')
 				} else {
 					Users.create({
-						Username: req.body.Username,
-						Password: hashedPassword,
-						Email: req.body.Email,
-						Birthday: req.body.Birthday,
+						username: req.body.username,
+						password: hashedPassword,
+						email: req.body.email,
+						birthday: req.body.birthday,
 					})
 						.then((user) => {
 							res.status(201).json(user)
@@ -72,20 +72,20 @@ app.post(
 )
 
 app.post('/movies', async (req, res) => {
-	await Movies.findOne({ Title: req.body.Title })
+	await Movies.findOne({ title: req.body.Title })
 		.then((movie) => {
 			if (movie) {
-				return res.status(400).send(req.body.Title + ' already exists')
+				return res.status(400).send(req.body.title + ' already exists')
 			} else {
 				Movies.create({
-					Title: req.body.Title,
-					Year: req.body.Year,
-					Description: req.body.Description,
-					Genre: req.body.Genre,
-					Director: req.body.Director,
-					Actors: req.body.Actors,
-					ImagePath: req.body.ImagePath,
-					Featured: req.body.Featured,
+					title: req.body.Title,
+					year: req.body.Year,
+					description: req.body.Description,
+					genre: req.body.Genre,
+					director: req.body.Director,
+					actors: req.body.Actors,
+					image: req.body.ImagePath,
+					featured: req.body.Featured,
 				})
 					.then((movie) => {
 						res.status(201).json(movie)
@@ -113,8 +113,8 @@ app.get('/movies', async (req, res) => {
 		})
 })
 
-app.get('/movies/:Title', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Movies.findOne({ Title: req.params.Title })
+app.get('/movies/:title', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Movies.findOne({ title: req.params.title })
 		.then((movie) => {
 			res.json(movie)
 		})
@@ -124,8 +124,8 @@ app.get('/movies/:Title', passport.authenticate('jwt', { session: false }), asyn
 		})
 })
 
-app.get('/movies/Genre/:Genre', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Movies.find({ 'Genre.Name': req.params.Genre })
+app.get('/movies/genre/:genre', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Movies.find({ 'genre.name': req.params.genre })
 		.then((movies) => {
 			res.json(movies)
 		})
@@ -135,8 +135,8 @@ app.get('/movies/Genre/:Genre', passport.authenticate('jwt', { session: false })
 		})
 })
 
-app.get('/movies/Director/:Director', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Movies.findOne({ 'Director.Name': req.params.Director })
+app.get('/movies/director/:director', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Movies.findOne({ 'director.name': req.params.director })
 		.then((director) => {
 			res.json(director.Director)
 		})
@@ -146,19 +146,19 @@ app.get('/movies/Director/:Director', passport.authenticate('jwt', { session: fa
 		})
 })
 
-app.put('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	if (req.user.Username !== req.params.Username) {
-		return res.status(403).send(req.user.Username + ' does not match ' + req.params.Username)
+app.put('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	if (req.user.username !== req.params.username) {
+		return res.status(403).send(req.user.username + ' does not match ' + req.params.username)
 	}
 	await Users.findOneAndUpdate(
-		{ Username: req.params.Username },
+		{ username: req.params.username },
 		{
 			$set: {
-				Username: req.body.Username,
-				Password: req.body.Password,
-				Email: req.body.Email,
-				Birthday: req.body.Birthday,
-				FavoriteMovies: req.body.FavoriteMovies,
+				username: req.body.username,
+				password: req.body.password,
+				email: req.body.email,
+				birthday: req.body.birthday,
+				favoriteMovies: req.body.favoriteMovies,
 			},
 		},
 		{ new: true },
@@ -183,8 +183,8 @@ app.get('/users', passport.authenticate('jwt', { session: false }), async (req, 
 		})
 })
 
-app.get('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.findOne({ Username: req.params.Username })
+app.get('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Users.findOne({ username: req.params.Username })
 		.then((user) => {
 			res.json(user)
 		})
@@ -194,13 +194,13 @@ app.get('/users/:Username', passport.authenticate('jwt', { session: false }), as
 		})
 })
 
-app.delete('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.findOneAndDelete({ Username: req.params.Username })
+app.delete('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Users.findOneAndDelete({ username: req.params.username })
 		.then((user) => {
 			if (!user) {
-				res.status(400).send(req.params.Username + ' was not found')
+				res.status(400).send(req.params.username + ' was not found')
 			} else {
-				res.status(200).send(req.params.Username + ' was deleted.')
+				res.status(200).send(req.params.username + ' was deleted.')
 			}
 		})
 		.catch((error) => {
@@ -210,13 +210,13 @@ app.delete('/users/:Username', passport.authenticate('jwt', { session: false }),
 })
 
 app.post(
-	'/users/:Username/FavoriteMovies/:MovieID',
+	'/users/:username/favoriteMovies/:movieId',
 	passport.authenticate('jwt', { session: false }),
 	async (req, res) => {
 		await Users.findOneAndUpdate(
-			{ Username: req.params.Username },
+			{ username: req.params.username },
 			{
-				$push: { FavoriteMovies: req.params.MovieID },
+				$push: { favoriteMovies: req.params.movieId },
 			},
 			{ new: true },
 		)
@@ -231,13 +231,13 @@ app.post(
 )
 
 app.delete(
-	'/users/:Username/FavoriteMovies/:MovieID',
+	'/users/:username/favoriteMovies/:movieId',
 	passport.authenticate('jwt', { session: false }),
 	async (req, res) => {
 		await Users.findOneAndUpdate(
-			{ Username: req.params.Username },
+			{ username: req.params.username },
 			{
-				$pull: { FavoriteMovies: req.params.MovieID },
+				$pull: { favoriteMovies: req.params.movieId },
 			},
 			{ new: true },
 		)
@@ -251,13 +251,13 @@ app.delete(
 	},
 )
 
-app.delete('/users/:Username', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.findOneAndRemove({ Username: req.params.Username })
+app.delete('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Users.findOneAndRemove({ username: req.params.username })
 		.then((user) => {
 			if (!user) {
-				res.status(400).send(req.params.Username + ' was not found')
+				res.status(400).send(req.params.username + ' was not found')
 			} else {
-				res.status(200).send(req.params.Username + ' was deleted.')
+				res.status(200).send(req.params.username + ' was deleted.')
 			}
 		})
 		.catch((error) => {

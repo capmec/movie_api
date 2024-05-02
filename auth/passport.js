@@ -1,11 +1,11 @@
 const passport = require('passport'),
 	LocalStrategy = require('passport-local').Strategy,
 	Models = require('../models'),
-	passportJWT = require('passport-jwt');
+	passportJWT = require('passport-jwt')
 
 let Users = Models.User,
 	JWTStrategy = passportJWT.Strategy,
-	ExtractJWT = passportJWT.ExtractJwt;
+	ExtractJWT = passportJWT.ExtractJwt
 
 passport.use(
 	new LocalStrategy(
@@ -14,31 +14,31 @@ passport.use(
 			passwordField: 'Password',
 		},
 		async (username, password, callback) => {
-			console.log(`${username} ${password}`);
-			await Users.findOne({ Username: username })
+			console.log(`${username} ${password}`)
+			await Users.findOne({ username: username })
 				.then((user) => {
 					if (!user) {
-						console.log('incorrect username');
+						console.log('incorrect username')
 						return callback(null, false, {
 							message: 'Incorrect username or password.',
-						});
+						})
 					}
 					if (!user.validatePassword(password)) {
-						console.log('incorrect password');
-						return callback(null, false, { message: 'Incorrect password.' });
+						console.log('incorrect password')
+						return callback(null, false, { message: 'Incorrect password.' })
 					}
-					console.log('finished');
-					return callback(null, user);
+					console.log('finished')
+					return callback(null, user)
 				})
 				.catch((error) => {
 					if (error) {
-						console.log(error);
-						return callback(error);
+						console.log(error)
+						return callback(error)
 					}
-				});
+				})
 		},
 	),
-);
+)
 
 //Authenticate users based on JWT submitted with their request.
 passport.use(
@@ -51,11 +51,11 @@ passport.use(
 			//take the object literal of the decoded JWT payload as a parameter
 			return await Users.findById(jwtPayload._id)
 				.then((user) => {
-					return callback(null, user);
+					return callback(null, user)
 				})
 				.catch((error) => {
-					return callback(error);
-				});
+					return callback(error)
+				})
 		},
 	),
-);
+)

@@ -2,21 +2,21 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 
 let movieSchema = mongoose.Schema({
-	Title: { type: String, required: true },
-	Year: { type: String, required: true },
-	Genre: { Name: String, Description: String },
-	Director: { Name: String, Bio: String, Birth: String, Death: String },
-	Actors: [String],
-	ImagePath: String,
-	Featured: Boolean,
+	title: { type: String, required: true },
+	year: { type: String, required: true },
+	genre: { name: String, description: String },
+	director: { name: String, bio: String, birth: String, death: String },
+	actors: [String],
+	image: String,
+	featured: Boolean,
 })
 
 let userSchema = mongoose.Schema({
-	Username: { type: String, required: true },
-	Password: { type: String, required: true },
-	Email: { type: String, required: true },
-	Birthday: Date,
-	FavoriteMovies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }],
+	username: { type: String, required: true },
+	password: { type: String, required: true },
+	email: { type: String, required: true },
+	birthday: Date,
+	favoriteMovies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Movie' }],
 })
 
 userSchema.statics.hashPassword = (password) => {
