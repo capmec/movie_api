@@ -79,13 +79,13 @@ app.post('/movies', async (req, res) => {
 			} else {
 				Movies.create({
 					title: req.body.Title,
-					year: req.body.Year,
-					description: req.body.Description,
-					genre: req.body.Genre,
-					director: req.body.Director,
-					actors: req.body.Actors,
-					image: req.body.ImagePath,
-					featured: req.body.Featured,
+					year: req.body.year,
+					description: req.body.description,
+					genre: req.body.genre,
+					director: req.body.director,
+					actors: req.body.actors,
+					image: req.body.image,
+					featured: req.body.featured,
 				})
 					.then((movie) => {
 						res.status(201).json(movie)
