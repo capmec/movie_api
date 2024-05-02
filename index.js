@@ -78,7 +78,7 @@ app.post('/movies', async (req, res) => {
 				return res.status(400).send(req.body.title + ' already exists')
 			} else {
 				Movies.create({
-					title: req.body.Title,
+					title: req.body.title,
 					year: req.body.year,
 					description: req.body.description,
 					genre: req.body.genre,
