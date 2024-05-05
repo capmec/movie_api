@@ -5,9 +5,9 @@ const express = require('express'),
 
 const dotenv = require('dotenv')
 dotenv.config()
-mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+// mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true })
 //connect LOCAL database
-//mongoose.connect('mongodb://localhost:27017/myFlixDB', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb://localhost:27017/myFlixDB', { useNewUrlParser: true, useUnifiedTopology: true })
 
 const app = express()
 app.use(express.json())
@@ -43,7 +43,7 @@ app.post(
 			return res.status(422).json({ errors: errors.array() })
 		}
 
-		let hashedPassword = Users.hashPassword(req.body.Password)
+		let hashedPassword = Users.hashPassword(req.body.password)
 		await Users.findOne({ username: req.body.username })
 			.then((user) => {
 				if (user) {
@@ -184,7 +184,7 @@ app.get('/users', passport.authenticate('jwt', { session: false }), async (req, 
 })
 
 app.get('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.findOne({ username: req.params.Username })
+	await Users.findOne({ username: req.params.username })
 		.then((user) => {
 			res.json(user)
 		})
@@ -266,7 +266,11 @@ app.delete('/users/:username', passport.authenticate('jwt', { session: false }),
 		})
 })
 
-const port = process.env.PORT || 8080
-app.listen(port, '0.0.0.0', () => {
-	console.log('Listening on Port ' + port)
+// const port = process.env.PORT || 8080
+// app.listen(port, '0.0.0.0', () => {
+// 	console.log('Listening on Port ' + port)
+// })
+
+app.listen(8000, () => {
+	console.log('Your app is listening on port 8000.')
 })
