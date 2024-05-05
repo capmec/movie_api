@@ -72,7 +72,7 @@ app.post(
 )
 
 app.post('/movies', async (req, res) => {
-	await Movies.findOne({ title: req.body.Title })
+	await Movies.findOne({ title: req.body.title })
 		.then((movie) => {
 			if (movie) {
 				return res.status(400).send(req.body.title + ' already exists')
