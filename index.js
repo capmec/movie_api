@@ -113,6 +113,18 @@ app.get('/movies', async (req, res) => {
 		})
 })
 
+//get movies by id //passport.authenticate('jwt', { session: false }),
+app.get('/movies/:id', async (req, res) => {
+	await Movies.findById(req.params.id)
+		.then((movie) => {
+			res.json(movie)
+		})
+		.catch((error) => {
+			console.error(error)
+			res.status(500).send('Error: ' + error)
+		})
+})
+
 app.get('/movies/:title', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Movies.findOne({ title: req.params.title })
 		.then((movie) => {
