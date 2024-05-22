@@ -102,7 +102,7 @@ app.post('/movies', async (req, res) => {
 		})
 })
 
-app.get('/movies', async (req, res) => {
+app.get('/movies', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Movies.find()
 		.then((movies) => {
 			res.json(movies)
@@ -114,7 +114,7 @@ app.get('/movies', async (req, res) => {
 })
 
 //get movies by id //passport.authenticate('jwt', { session: false }),
-app.get('/movies/:id', async (req, res) => {
+app.get('/movies/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Movies.findById(req.params.id)
 		.then((movie) => {
 			res.json(movie)
@@ -177,6 +177,18 @@ app.put('/users/:username', passport.authenticate('jwt', { session: false }), as
 	)
 		.then((updatedUser) => {
 			res.json(updatedUser)
+		})
+		.catch((error) => {
+			console.error(error)
+			res.status(500).send('Error: ' + error)
+		})
+})
+
+//get user by id
+app.get('/users/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Users.findById(req.params.id)
+		.then((user) => {
+			res.json(user)
 		})
 		.catch((error) => {
 			console.error(error)
