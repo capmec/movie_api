@@ -285,20 +285,15 @@ app.delete('/users/:id', passport.authenticate('jwt', { session: false }), async
 		})
 })
 
-app.post('/users/:username/movies/:title', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Movies.findOne({ title: req.params.title })
-		.then(async (movie) => {
-			if (!movie) {
-				return res.status(404).json({ error: 'Movie not found' })
-			}
-
-			await Users.findOneAndUpdate(
-				{ username: req.params.username },
-				{ $push: { FavoriteMovies: req.params.title } },
-				{ new: true },
-			).then((updatedUser) => {
-				res.json(updatedUser)
-			})
+// Add a movie from movies/:title to a user's favoriteMovies array
+app.post('/users/:username/movies/:title', async (req, res) => {
+	await Users.findOneAndUpdate(
+		{ username: req.params.username },
+		{ $push: { favoriteMovies: req.params.title } },
+		{ new: true },
+	)
+		.then((updatedUser) => {
+			res.json(updatedUser)
 		})
 		.catch((error) => {
 			console.error(error)
