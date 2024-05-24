@@ -286,7 +286,7 @@ app.delete('/users/:id', passport.authenticate('jwt', { session: false }), async
 })
 
 // Add a movie from movies/:title to a user's favoriteMovies array
-app.post('/users/:username/movies/:title', async (req, res) => {
+app.post('/users/:username/movies/:id', async (req, res) => {
 	await Users.findOneAndUpdate(
 		{ username: req.params.username },
 		{ $push: { favoriteMovies: req.params.title } },
