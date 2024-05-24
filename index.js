@@ -1,3 +1,5 @@
+const { error } = require('console')
+
 const express = require('express'),
 	mongoose = require('mongoose'),
 	Models = require('./models.js'),
@@ -5,9 +7,9 @@ const express = require('express'),
 
 const dotenv = require('dotenv')
 dotenv.config()
-mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+//mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true })
 //connect LOCAL database
-// mongoose.connect('mongodb://localhost:27017/myFlixDB', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb://localhost:27017/myFlixDB', { useNewUrlParser: true, useUnifiedTopology: true })
 
 const app = express()
 app.use(express.json())
@@ -283,26 +285,43 @@ app.delete('/users/:id', passport.authenticate('jwt', { session: false }), async
 		})
 })
 
-app.post(
-	'/users/:username/favoriteMovies/:movieId',
-	passport.authenticate('jwt', { session: false }),
-	async (req, res) => {
-		await Users.findOneAndUpdate(
-			{ username: req.params.username },
-			{
-				$push: { favoriteMovies: req.params.movieId },
-			},
-			{ new: true },
-		)
-			.then((updatedUser) => {
+app.post('/users/:username/movies/:title', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Movies.findOne({ title: req.params.title })
+		.then(async (movie) => {
+			if (!movie) {
+				return res.status(404).json({ error: 'Movie not found' })
+			}
+
+			await Users.findOneAndUpdate(
+				{ username: req.params.username },
+				{ $push: { FavoriteMovies: req.params.title } },
+				{ new: true },
+			).then((updatedUser) => {
 				res.json(updatedUser)
 			})
-			.catch((error) => {
-				console.error(error)
-				res.status(500).send('Error: ' + error)
-			})
-	},
-)
+		})
+		.catch((error) => {
+			console.error(error)
+			res.status(500).send('Error: ' + error)
+		})
+})
+
+app.delete('/users/:username/movies/:title', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Users.findOneAndUpdate(
+		{ username: req.params.username },
+		{
+			$pull: { FavoriteMovies: req.params.title },
+		},
+		{ new: true },
+	)
+		.then((updatedUser) => {
+			res.json(updatedUser)
+		})
+		.catch((err) => {
+			console.error(err)
+			res.status(500).send('Error: ' + err)
+		})
+})
 
 app.get('/users/:username/favoriteMovies', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Users.findOne({ username: req.params.username })
@@ -315,27 +334,6 @@ app.get('/users/:username/favoriteMovies', passport.authenticate('jwt', { sessio
 			res.status(500).send('Error: ' + error)
 		})
 })
-
-app.delete(
-	'/users/:username/favoriteMovies/:movieId',
-	passport.authenticate('jwt', { session: false }),
-	async (req, res) => {
-		await Users.findOneAndUpdate(
-			{ username: req.params.username },
-			{
-				$pull: { favoriteMovies: req.params.movieId },
-			},
-			{ new: true },
-		)
-			.then((updatedUser) => {
-				res.json(updatedUser)
-			})
-			.catch((error) => {
-				console.error(error)
-				res.status(500).send('Error: ' + error)
-			})
-	},
-)
 
 app.delete('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Users.findOneAndRemove({ username: req.params.username })
