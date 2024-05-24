@@ -113,7 +113,6 @@ app.get('/movies', passport.authenticate('jwt', { session: false }), async (req,
 		})
 })
 
-//get movies by id //passport.authenticate('jwt', { session: false }),
 app.get('/movies/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Movies.findById(req.params.id)
 		.then((movie) => {
@@ -150,7 +149,7 @@ app.get('/movies/genre/:genre', passport.authenticate('jwt', { session: false })
 app.get('/movies/director/:director', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Movies.findOne({ 'director.name': req.params.director })
 		.then((director) => {
-			res.json(director.Director)
+			res.json(director.director)
 		})
 		.catch((error) => {
 			console.error(error)
@@ -158,7 +157,59 @@ app.get('/movies/director/:director', passport.authenticate('jwt', { session: fa
 		})
 })
 
-app.put('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
+app.get('/movies/actors/:actors', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Movies.findOne({ actors: req.params.actors })
+		.then((actor) => {
+			res.json(actor.Actors)
+		})
+		.catch((error) => {
+			console.error(error)
+			res.status(500).send('Error: ' + error)
+		})
+})
+
+app.put('/movies/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Movies.findOneAndUpdate(
+		{ title: req.params.title },
+		{
+			$set: {
+				title: req.body.title,
+				year: req.body.year,
+				description: req.body.description,
+				genre: req.body.genre,
+				director: req.body.director,
+				actors: req.body.actors,
+				image: req.body.image,
+				featured: req.body.featured,
+			},
+		},
+		{ new: true },
+	)
+		.then((updatedMovie) => {
+			res.json(updatedMovie)
+		})
+		.catch((error) => {
+			console.error(error)
+			res.status(500).send('Error: ' + error)
+		})
+})
+
+app.delete('/movies/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Movies.findOneAndRemove({ title: req.params.title })
+		.then((movie) => {
+			if (!movie) {
+				res.status(400).send(req.params.title + ' was not found')
+			} else {
+				res.status(200).send(req.params.title + ' was deleted.')
+			}
+		})
+		.catch((error) => {
+			console.error(error)
+			res.status(500).send('Error: ' + error)
+		})
+})
+
+app.put('/users/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	if (req.user.username !== req.params.username) {
 		return res.status(403).send(req.user.username + ' does not match ' + req.params.username)
 	}
@@ -184,7 +235,6 @@ app.put('/users/:username', passport.authenticate('jwt', { session: false }), as
 		})
 })
 
-//get user by id
 app.get('/users/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Users.findById(req.params.id)
 		.then((user) => {
@@ -218,13 +268,13 @@ app.get('/users/:username', passport.authenticate('jwt', { session: false }), as
 		})
 })
 
-app.delete('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.findOneAndDelete({ username: req.params.username })
+app.delete('/users/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Users.findByIdAndRemove(req.params.id)
 		.then((user) => {
 			if (!user) {
-				res.status(400).send(req.params.username + ' was not found')
+				res.status(400).send(req.params.id + ' was not found')
 			} else {
-				res.status(200).send(req.params.username + ' was deleted.')
+				res.status(200).send(req.params.id + ' was deleted.')
 			}
 		})
 		.catch((error) => {
@@ -253,6 +303,18 @@ app.post(
 			})
 	},
 )
+
+app.get('/users/:username/favoriteMovies', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	await Users.findOne({ username: req.params.username })
+		.populate('favoriteMovies')
+		.then((user) => {
+			res.json(user.favoriteMovies)
+		})
+		.catch((error) => {
+			console.error(error)
+			res.status(500).send('Error: ' + error)
+		})
+})
 
 app.delete(
 	'/users/:username/favoriteMovies/:movieId',
