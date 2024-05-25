@@ -7,9 +7,9 @@ const express = require('express'),
 
 const dotenv = require('dotenv')
 dotenv.config()
-mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+//mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true })
 //connect LOCAL database
-//mongoose.connect('mongodb://localhost:27017/myFlixDB', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb://localhost:27017/myFlixDB', { useNewUrlParser: true, useUnifiedTopology: true })
 
 const app = express()
 app.use(express.json())
@@ -301,34 +301,39 @@ app.post('/users/:username/movies/:id', async (req, res) => {
 		})
 })
 
-app.delete('/users/:username/movies/:title', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.findOneAndUpdate(
-		{ username: req.params.username },
-		{
-			$pull: { FavoriteMovies: req.params.title },
-		},
-		{ new: true },
-	)
-		.then((updatedUser) => {
-			res.json(updatedUser)
-		})
-		.catch((err) => {
-			console.error(err)
-			res.status(500).send('Error: ' + err)
-		})
+//DELETE a movie from a user's favoriteMovies array
+
+app.delete('/users/:username/movies/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    await Users.findOneAndUpdate(
+        { username: req.params.username },
+        {
+            $pull: { favoriteMovies: req.params.id }, // Ensure this is the correct field and value
+        },
+        { new: true },
+    )
+    .then((updatedUser) => {
+        res.json(updatedUser);
+    })
+    .catch((err) => {
+        console.error(err);
+        res.status(500).send('Error: ' + err);
+    });
+});
+
+
+//get a user's favorite movies from the favoriteMovies array
+app.get('/users/:username/favoriteMovies', async (req, res) => {
+	try {
+		const user = await User.findOne({ username: req.params.username }).populate('favoriteMovies');
+		res.json(user.favoriteMovies);
+	  } catch (err) {
+		res.status(500).json({ message: err.message });
+	  }
 })
 
-app.get('/users/:username/favoriteMovies', passport.authenticate('jwt', { session: false }), async (req, res) => {
-	await Users.findOne({ username: req.params.username })
-		.populate('favoriteMovies')
-		.then((user) => {
-			res.json(user.favoriteMovies)
-		})
-		.catch((error) => {
-			console.error(error)
-			res.status(500).send('Error: ' + error)
-		})
-})
+
+
+
 
 app.delete('/users/:username', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Users.findOneAndRemove({ username: req.params.username })
