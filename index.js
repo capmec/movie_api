@@ -73,7 +73,7 @@ app.post(
 	},
 )
 
-app.post('/movies', async (req, res) => {
+app.post('/movies', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Movies.findOne({ title: req.body.title })
 		.then((movie) => {
 			if (movie) {
@@ -286,7 +286,7 @@ app.delete('/users/:id', passport.authenticate('jwt', { session: false }), async
 })
 
 // Add a movie from movies/:title to a user's favoriteMovies array
-app.post('/users/:username/movies/:id', async (req, res) => {
+app.post('/users/:username/movies/:id', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	await Users.findOneAndUpdate(
 		{ username: req.params.username },
 		{ $push: { favoriteMovies: req.params.id } },
@@ -322,7 +322,7 @@ app.delete('/users/:username/movies/:id', passport.authenticate('jwt', { session
 
 
 //get a user's favorite movies from the favoriteMovies array
-app.get('/users/:username/favoriteMovies', async (req, res) => {
+app.get('/users/:username/favoriteMovies', passport.authenticate('jwt', { session: false }), async (req, res) => {
 	try {
 		const user = await User.findOne({ username: req.params.username }).populate('favoriteMovies');
 		res.json(user.favoriteMovies);
