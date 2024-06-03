@@ -423,6 +423,25 @@ app.delete(
 	},
 );
 
+//FIND MOVIE BY TITLE, actor, director, or genre
+// Search movies by title, actor, or genre
+app.get('/movies/search', passport.authenticate('jwt', { session: false }), async (req, res) => {
+	const { query } = req.query;
+  
+	try {
+	  const movies = await Movies.find({
+		$or: [
+		  { title: { $regex: query, $options: 'i' } },
+		  { 'genre.name': { $regex: query, $options: 'i' } },
+		  { actors: { $regex: query, $options: 'i' } }
+		]
+	  });
+	  res.json(movies);
+	} catch (error) {
+	  res.status(500).send('Error: ' + error);
+	}
+  });
+
 const port = process.env.PORT || 8080;
 app.listen(port, '0.0.0.0', () => {
 	console.log('Listening on Port ' + port);
