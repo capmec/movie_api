@@ -21,13 +21,13 @@ const Users = Models.User;
 const cors = require('cors');
 app.use(cors());
 
-const corsOptions = {
-	// origin: 'http://localhost:1234', // Replace with your frontend URL
-	origin: 'https://movie-api-o5p9.onrender.com/',
-	methods: ['GET', 'POST', 'PUT', 'DELETE'],
-	allowedHeaders: ['Content-Type', 'Authorization'],
-};
-app.use(cors(corsOptions));
+// const corsOptions = {
+// 	// origin: 'http://localhost:1234', // Replace with your frontend URL
+// 	origin: 'https://movie-api-o5p9.onrender.com/',
+// 	methods: ['GET', 'POST', 'PUT', 'DELETE'],
+// 	allowedHeaders: ['Content-Type', 'Authorization'],
+// };
+// app.use(cors(corsOptions));
 
 let auth = require('./auth/auth.js')(app);
 const passport = require('passport');
