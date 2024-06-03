@@ -185,17 +185,24 @@ app.delete(
 			});
 	},
 );
-//GET USER'S FAVORITE MOVIES
-app.get('/users/:username/favoriteMovies', async (req, res) => {
-	try {
-		const user = await Users.findOne({
-			username: req.params.username,
-		}).populate('favoriteMovies');
+// GET USER'S FAVORITE MOVIES BY USER'S ID
+app.get(
+	'/users/:id/favoriteMovies',
+	passport.authenticate('jwt', { session: false }),
+	async (req, res) => {
+	  try {
+		const user = await Users.findById(req.params.id).populate('favoriteMovies');
+		if (!user) {
+		  return res.status(404).send('User not found');
+		}
 		res.json(user.favoriteMovies);
-	} catch (error) {
-		res.status(500).json({ message: error.message });
+	  } catch (error) {
+		console.error(error);
+		res.status(500).send('Error: ' + error);
+	  }
 	}
-});
+  );
+
 
 //ADD A MOVIE TO USER'S FAVORITE MOVIES
 app.post(
