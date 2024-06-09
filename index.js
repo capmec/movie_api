@@ -21,9 +21,9 @@ const Users = Models.User;
 const cors = require('cors');
 let allowedOrigins = [
 	'http://localhost:8080', 
-	'http://testsite.com', 
+	'https://bflixb.netlify.app', 
 	'http://localhost:1234', 
-	'https://my-awesome-site123.netlify.app'
+	
 ];
 
 app.use(cors({
