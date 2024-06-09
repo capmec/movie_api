@@ -23,6 +23,7 @@ let allowedOrigins = [
 	'http://localhost:8080', 
 	'https://bflixb.netlify.app', 
 	'http://localhost:1234', 
+	'https://movie-api-o5p9.onrender.com',
 	
 ];
 
