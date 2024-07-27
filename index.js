@@ -7,9 +7,9 @@ const express = require('express'),
 
 const dotenv = require('dotenv');
 dotenv.config();
-mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+//mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true })
 //connect LOCAL database
-//mongoose.connect('mongodb://localhost:27017/myFlixDB', {useNewUrlParser: true, useUnifiedTopology: true,});
+mongoose.connect('mongodb://localhost:27017/myFlixDB', {useNewUrlParser: true, useUnifiedTopology: true,});
 
 const app = express();
 app.use(express.json());
@@ -24,6 +24,8 @@ let allowedOrigins = [
 	'https://bflixb.netlify.app', 
 	'http://localhost:1234', 
 	'https://movie-api-o5p9.onrender.com',
+	'http://localhost:4200'
+
 	
 ];
 
@@ -34,6 +36,8 @@ app.use(cors({
       let message = 'The CORS policy for this application doesn’t allow access from origin ' + origin;
       return callback(new Error(message), false);
     }
+	
+
     return callback(null, true);
   }
 }));
