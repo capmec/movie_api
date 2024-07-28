@@ -38,7 +38,9 @@ app.use(cors({
   }
 }));
 
-
+let auth = require('./auth/auth.js')(app);
+const passport = require('passport');
+require('./auth/passport.js');
 
 app.get('/', (req, res) => {
 	res.send('Welcome to myFlix!');
@@ -46,7 +48,7 @@ app.get('/', (req, res) => {
 
 app.use(express.static('public'));
 
-//REGISTER USER
+//AUTHENTICATION
 app.post(
 	'/users',
 	[
@@ -91,36 +93,6 @@ app.post(
 			});
 	},
 );
-
-// Authentication for user login
-app.post('/login', [
-	check('username', 'Username is required').isLength({ min: 5 }),
-	check('password', 'Password is required').not().isEmpty(),
-  ], async (req, res) => {
-	// Validate request body
-	let errors = validationResult(req);
-	if (!errors.isEmpty()) {
-	  return res.status(400).json({ message: 'Validation error', errors: errors.array() });
-	}
-  
-	// Check if user exists
-	let user = await Users.findOne({ username: req.body.username });
-	if (!user) {
-	  return res.status(400).json({ message: 'Incorrect username or password', user: false });
-	}
-  
-	// Validate password
-	let validPassword = await user.validatePassword(req.body.password);
-	if (!validPassword) {
-	  return res.status(400).json({ message: 'Incorrect username or password', user: false });
-	}
-  
-	// Generate JWT token (using a hypothetical generateJWT method)
-	let token = user.generateJWT();
-  
-	// Respond with user data and token
-	return res.status(200).json({ user: user, token: token });
-  });
 
 //GET USER BY ID
 app.get(
