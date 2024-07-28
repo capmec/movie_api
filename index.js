@@ -2,8 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Models = require('./models.js');
 const { check, validationResult } = require('express-validator');
-
 const dotenv = require('dotenv');
+const cors = require('cors');
+const passport = require('passport');
+const jwt = require('jsonwebtoken');
+
+
 dotenv.config();
 mongoose.connect(process.env.CONNECTION_URI, { useNewUrlParser: true, useUnifiedTopology: true })
 //connect LOCAL database
@@ -16,50 +20,50 @@ app.use(express.urlencoded({ extended: true }));
 const Movies = Models.Movie;
 const Users = Models.User;
 
-const cors = require('cors');
+// CORS setup
 let allowedOrigins = [
-	'http://localhost:8080', 
-	'https://bflixb.netlify.app', 
-	'http://localhost:1234', 
+	'http://localhost:8080',
+	'https://bflixb.netlify.app',
+	'http://localhost:1234',
 	'https://movie-api-o5p9.onrender.com',
 	'http://localhost:4200'
-];
-	
+  ];
 
+  app.use(cors({
+	origin: (origin, callback) => {
+	  if (!origin) return callback(null, true);
+	  if (allowedOrigins.indexOf(origin) === -1) {
+		let message = 'The CORS policy for this application doesn’t allow access from origin ' + origin;
+		return callback(new Error(message), false);
+	  }
+	  return callback(null, true);
+	}
+  }));
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) { // If a specific origin isn’t found on the list of allowed origins
-      let message = 'The CORS policy for this application doesn’t allow access from origin ' + origin;
-      return callback(new Error(message), false);
-    }
-    return callback(null, true);
-  }
-}));
+  // Import authentication routes
 
 let auth = require('./auth/auth.js')(app);
 const passport = require('passport');
 require('./auth/passport.js');
 
+
+// Main route
 app.get('/', (req, res) => {
 	res.send('Welcome to myFlix!');
 });
-
 app.use(express.static('public'));
 
-//AUTHENTICATION
+
+// User registration route
 app.post(
 	'/users',
 	[
 		check('username', 'Username is required').isLength({ min: 5 }),
-		check(
-			'username',
-			'Username contains non alphanumeric characters - not allowed.',
-		).isAlphanumeric(),
+		check('username', 'Username contains non alphanumeric characters - not allowed.').isAlphanumeric(),
 		check('password', 'Password is required').not().isEmpty(),
 		check('email', 'Email does not appear to be valid').isEmail(),
-	],
+	  ],
+
 	async (req, res) => {
 		let errors = validationResult(req);
 		if (!errors.isEmpty()) {
@@ -94,6 +98,34 @@ app.post(
 	},
 );
 
+// User login route
+app.post('/login', [
+	check('username', 'Username is required').isLength({ min: 5 }),
+	check('password', 'Password is required').not().isEmpty(),
+  ], async (req, res) => {
+	let errors = validationResult(req);
+	if (!errors.isEmpty()) {
+	  return res.status(400).json({ errors: errors.array() });
+	}
+  
+	let user = await Users.findOne({ username: req.body.username });
+  
+	if (!user) {
+	  return res.status(400).json({ message: 'Incorrect username or password', user: false });
+	}
+  
+	let isPasswordValid = await user.validatePassword(req.body.password); // Assuming a method exists for password validation
+	if (!isPasswordValid) {
+	  return res.status(400).json({ message: 'Incorrect username or password', user: false });
+	}
+  
+	// Assuming JWT secret and expiration are set in .env file
+	let token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  
+	return res.status(200).json({ user: user, token: token });
+  });
+
+  
 //GET USER BY ID
 app.get(
 	'/users/:id',
