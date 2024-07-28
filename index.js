@@ -40,10 +40,8 @@ let allowedOrigins = [
 	}
   }));
 
-  // Import authentication routes
-
+// Import authentication routes
 let auth = require('./auth/auth.js')(app);
-const passport = require('passport');
 require('./auth/passport.js');
 
 
