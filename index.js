@@ -210,20 +210,18 @@ app.delete(
 	'/users/:id',
 	passport.authenticate('jwt', { session: false }),
 	async (req, res) => {
-		await Users.findByIdAndDelete(req.params.id)
-			.then((user) => {
-				if (!user) {
-					res.status(400).send(req.params.id + ' was not found');
-				} else {
-					res.status(200).send(req.params.id + ' was deleted.');
-				}
-			})
-			.catch((error) => {
-				console.error(error);
-				res.status(500).send('Error: ' + error);
-			});
-	},
-);
+	  try {
+		const user = await Users.findByIdAndDelete(req.params.id);
+		if (!user) {
+		  return res.status(400).send(req.params.id + ' was not found');
+		}
+		return res.status(200).send(req.params.id + ' was deleted.');
+	  } catch (error) {
+		console.error(error);
+		return res.status(500).send('Error: ' + error);
+	  }
+	}
+  );
 // GET USER'S FAVORITE MOVIES BY USER'S ID
 app.get(
 	'/users/:id/favoriteMovies',
@@ -245,45 +243,49 @@ app.get(
 
 //ADD A MOVIE TO USER'S FAVORITE MOVIES
 app.post(
-	'/users/:username/movies/:id',
+	'/users/:id/movies/:movieId',
 	passport.authenticate('jwt', { session: false }),
 	async (req, res) => {
-		await Users.findOneAndUpdate(
-			{ username: req.params.username },
-			{ $push: { favoriteMovies: req.params.id } },
-			{ new: true },
-		)
-			.then((updatedUser) => {
-				res.json(updatedUser);
-			})
-			.catch((error) => {
-				console.error(error);
-				res.status(500).send('Error: ' + error);
-			});
-	},
-);
+	  try {
+		const user = await Users.findById(req.params.id);
+		if (!user) {
+		  return res.status(404).send('User not found');
+		}
+		// Check if the movie is already in the favoriteMovies array
+		if (user.favoriteMovies.includes(req.params.movieId)) {
+		  return res.status(400).send('Movie already in favorites');
+		}
+		user.favoriteMovies.push(req.params.movieId);
+		await user.save();
+		res.status(200).json(user);
+	  } catch (error) {
+		console.error(error);
+		res.status(500).send('Error: ' + error);
+	  }
+	}
+  );
 
 //DELETE A MOVIE FROM USER'S FAVORITE MOVIES
 app.delete(
-	'/users/:username/movies/:id',
+	'/users/:id/movies/:movieId',
 	passport.authenticate('jwt', { session: false }),
 	async (req, res) => {
-		await Users.findOneAndUpdate(
-			{ username: req.params.username },
-			{
-				$pull: { favoriteMovies: req.params.id },
-			},
-			{ new: true },
-		)
-			.then((updatedUser) => {
-				res.json(updatedUser);
-			})
-			.catch((error) => {
-				console.error(error);
-				res.status(500).send('Error: ' + error);
-			});
-	},
-);
+	  try {
+		const user = await Users.findById(req.params.id);
+		if (!user) {
+		  return res.status(404).send('User not found');
+		}
+		user.favoriteMovies = user.favoriteMovies.filter(
+		  (id) => id.toString() !== req.params.movieId
+		);
+		await user.save();
+		res.status(200).json(user);
+	  } catch (error) {
+		console.error(error);
+		res.status(500).send('Error: ' + error);
+	  }
+	}
+  );
 
 //CREATE MOVIE
 app.post('/movies', async (req, res) => {
@@ -456,6 +458,22 @@ app.delete(
 				} else {
 					res.status(200).send(req.params.title + ' was deleted.');
 				}
+			})
+			.catch((error) => {
+				console.error(error);
+				res.status(500).send('Error: ' + error);
+			});
+	},
+);
+
+//GET DIRECTOR DETAILS FROM MOVIE
+app.get(
+	'/movies/director/:name',
+	passport.authenticate('jwt', { session: false }),
+	async (req, res) => {
+		await Movies.findOne({ 'director.name': req.params.name })
+			.then((director) => {
+				res.json(director.director);
 			})
 			.catch((error) => {
 				console.error(error);
