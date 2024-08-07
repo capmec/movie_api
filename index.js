@@ -25,7 +25,10 @@ let allowedOrigins = [
   'https://bflixb.netlify.app',
   'http://localhost:1234',
   'https://movie-api-o5p9.onrender.com',
-  'http://localhost:4200'
+  'http://localhost:4200',
+  'https://capmec.github.io',
+  
+
 ];
 
 app.use(cors({
